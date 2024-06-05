@@ -15,6 +15,19 @@ for python scripts (including command-line tools):
 2. Install [pipenv](https://pipenv.pypa.io/en/latest/)
 3. Install packages: `pipenv install`
 
+## Vanilla implementation
+
+### Setup
+
+1. Prepare Mjpeg file by using command line tool `cmd/v2m.py` (see Command line tools section)
+2. Run server first
+3. Run client with port, address, file path
+
+Usage:
+
+```sh
+```
+
 ## Command line tools
 
 ### `cmd/v2m.py` video or gif to mjpeg convertor
