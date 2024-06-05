@@ -24,9 +24,9 @@ class VideoStream:
             else:
                 raise ValueError("Unsupported file format")
 
-            # Adjust frame rate if target_fps is set
-            if target_fps is not None:
-                self.frames = self._drop_frames(self.frames, target_fps)
+            # # Adjust frame rate if target_fps is set
+            # if target_fps is not None:
+            #     self.frames = self._drop_frames(self.frames, target_fps)
 
         except Exception as e:
             print(e)
@@ -46,11 +46,11 @@ class VideoStream:
         """Get frame number."""
         return self.frameNum
 
-    def _drop_frames(self, frames, target_fps):
-        """Drops frames to achieve a target FPS."""
-        original_fps = len(frames)  # Assuming 1 second of frames for simplicity
-        keep_every_n_frames = int(original_fps / target_fps)
-        return frames[::keep_every_n_frames]
+    # def _drop_frames(self, frames, target_fps):
+    #     """Drops frames to achieve a target FPS."""
+    #     original_fps = len(frames)  # Assuming 1 second of frames for simplicity
+    #     keep_every_n_frames = int(original_fps / target_fps)
+    #     return frames[::keep_every_n_frames]
 
 def gif_to_jpeg_bytearrays(gif_path, resize_width=200, resize_height=150):
     """
@@ -89,7 +89,7 @@ def video_to_jpeg_bytearrays(video_path, resize_width=200, resize_height=150, ta
 
     while True:
         ret, frame = None, None
-        for i in range(int(fps/target_fps)):
+        for i in range(max(1, int(fps/target_fps))):
             ret, frame = cap.read()
 
         if not ret:
