@@ -5,7 +5,7 @@
 - `/vanilla` - First python implemetation on course
 - `/cmd` - Some command line tools
 - `/server` - golang implementation
-- `/app` - client flutter app implementation
+- `/client` - client flutter app implementation
 
 ## Setup
 
@@ -26,6 +26,11 @@ for python scripts (including command-line tools):
 Usage:
 
 ```sh
+# Run server at background
+pipenv run python Server.py 8081
+
+# Run client program
+pipenv run python ClientLauncher.py 127.0.0.1 8081 9002 he.mjpg
 ```
 
 ## Command line tools
