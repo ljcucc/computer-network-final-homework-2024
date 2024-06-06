@@ -1,4 +1,4 @@
-package main
+package rtp
 
 import (
 	"bytes"
@@ -20,20 +20,26 @@ func (p *RtpPacket) Encode(version int, padding bool, extension bool, cc int, se
 	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
 	p.header[0] = (0b11 << 6) & 0xFF // version bits
-	p.header[0] |= (padding ? 1 << 5 : 0)
-	p.header[0] |= (extension ? 1 << 4 : 0)
-	p.header[0] |= cc & 0xFF
+	if padding {
+		p.header[0] |= byte(1 << 5)
+	}
+	if extension {
+		p.header[0] |= byte(1 << 4)
+	}
+	p.header[0] |= byte(cc)
 
-	p.header[1] = (marker ? 1 << 7 : 0) & 0xFF
-	p.header[1] |= pt & 0xFF
+	if marker {
+		p.header[1] = byte(1 << 7)
+	}
+	p.header[1] |= byte(pt & 0xFF)
 
-	p.header[2] = (seqnum >> 8) & 0xFF
-	p.header[3] = seqnum & 0xFF
+	p.header[2] = byte(seqnum>>8) & 0xFF
+	p.header[3] = byte(seqnum & 0xFF)
 
-	p.header[4] = (timestamp >> 24) & 0xFF
-	p.header[5] = (timestamp >> 16) & 0xFF
-	p.header[6] = (timestamp >> 8) & 0xFF
-	p.header[7] = timestamp & 0xFF
+	p.header[4] = byte((timestamp >> 24) & 0xFF)
+	p.header[5] = byte((timestamp >> 16) & 0xFF)
+	p.header[6] = byte((timestamp >> 8) & 0xFF)
+	p.header[7] = byte(timestamp & 0xFF)
 
 	p.payload = payload
 }
@@ -44,15 +50,19 @@ func (p *RtpPacket) Decode(byteStream []byte) {
 }
 
 func (p *RtpPacket) Version() int {
-	return int(p.header[0] >> 6) & 0b11
+	return int(p.header[0]>>6) & 0b11
 }
 
 func (p *RtpPacket) SeqNum() int {
-	return int(p.header[2]<<8 | p.header[3])
+	return int(
+		uint(p.header[2])<<8 | uint(p.header[3]),
+	)
 }
 
 func (p *RtpPacket) Timestamp() int {
-	return int(p.header[4]<<24 | p.header[5]<<16 | p.header[6]<<8 | p.header[7])
+	return int(
+		uint(p.header[4])<<24 | uint(p.header[5])<<16 | uint(p.header[6])<<8 | uint(p.header[7]),
+	)
 }
 
 func (p *RtpPacket) PayloadType() int {
