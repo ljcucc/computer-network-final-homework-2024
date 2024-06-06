@@ -33,6 +33,28 @@ pipenv run python Server.py 8081
 pipenv run python ClientLauncher.py 127.0.0.1 8081 9002 he.mjpg
 ```
 
+## Golang(Server) implementation
+
+### Get Started
+
+1. Setup Go environment on your machine
+2. `cd ./server`
+3. `go run .`
+
+Usage:
+
+```
+Usage of server:
+  -port int
+    	Server port (default 8080)
+```
+
+## Flutter(Client) implementation
+
+1. Setup flutter environment on your machine
+2. `cd ./client`
+3. `flutter run`
+
 ## Command line tools
 
 ### `cmd/v2m.py` video or gif to mjpeg convertor
