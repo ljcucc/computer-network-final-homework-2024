@@ -36,8 +36,10 @@ func main() {
 			continue
 		}
 
-		clientInfo := make(map[string]interface{})
-		clientInfo["rtspSocket"] = &conn
+		// Create clientInfo struct instead of map
+		clientInfo := worker.ClientInfo{
+			RtspSocket: &conn,
+		}
 		worker := worker.NewServerWorker(clientInfo)
 		go worker.Run()
 	}

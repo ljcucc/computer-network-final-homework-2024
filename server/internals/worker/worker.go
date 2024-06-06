@@ -26,13 +26,23 @@ const (
 	CON_ERR_500        = 2
 )
 
+// ClientInfo struct to hold client-specific information
+type ClientInfo struct {
+	RtspSocket  *net.Conn
+	VideoStream *stream.VideoStream
+	Session     int
+	RtpPort     string
+	RtpSocket   *net.UDPConn
+	Event       chan bool
+}
+
 type ServerWorker struct {
-	clientInfo map[string]interface{}
+	clientInfo ClientInfo
 	state      int
 	sync.Mutex
 }
 
-func NewServerWorker(clientInfo map[string]interface{}) *ServerWorker {
+func NewServerWorker(clientInfo ClientInfo) *ServerWorker {
 	return &ServerWorker{
 		clientInfo: clientInfo,
 		state:      INIT,
@@ -44,7 +54,7 @@ func (w *ServerWorker) Run() {
 }
 
 func (w *ServerWorker) recvRtspRequest() {
-	connSocket := w.clientInfo["rtspSocket"].(*net.Conn)
+	connSocket := w.clientInfo.RtspSocket
 
 	for {
 		buf := make([]byte, 256)
@@ -73,17 +83,17 @@ func (w *ServerWorker) processRtspRequest(data string) {
 		if w.state == INIT {
 			fmt.Println("processing SETUP\n")
 
-			w.clientInfo["videoStream"] = stream.NewVideoStream(filename)
+			w.clientInfo.VideoStream = stream.NewVideoStream(filename)
 			w.state = READY
 
 			// Generate a randomized RTSP session ID
-			w.clientInfo["session"] = rand.Intn(900000) + 100000
+			w.clientInfo.Session = rand.Intn(900000) + 100000
 
 			// Send RTSP reply
 			w.replyRtsp(OK_200, seq[1])
 
 			// Get the RTP/UDP port from the last line
-			w.clientInfo["rtpPort"] = strings.Split(request[2], " ")[3]
+			w.clientInfo.RtpPort = strings.Split(request[2], " ")[3]
 		}
 	case PLAY:
 		if w.state == READY {
@@ -91,7 +101,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 			w.state = PLAYING
 
 			// Create a new socket for RTP/UDP
-			rtpAddr, err := net.ResolveUDPAddr("udp", ":"+w.clientInfo["rtpPort"].(string))
+			rtpAddr, err := net.ResolveUDPAddr("udp", ":"+w.clientInfo.RtpPort)
 			if err != nil {
 				fmt.Println("Error resolving address:", err)
 				return
@@ -101,13 +111,13 @@ func (w *ServerWorker) processRtspRequest(data string) {
 				fmt.Println("Error creating UDP socket:", err)
 				return
 			}
-			w.clientInfo["rtpSocket"] = rtpSocket
+			w.clientInfo.RtpSocket = rtpSocket
 
 			w.replyRtsp(OK_200, seq[1])
 
 			// Create a new thread and start sending RTP packets
 			event := make(chan bool)
-			w.clientInfo["event"] = event
+			w.clientInfo.Event = event
 			go w.sendRtp(event)
 		}
 	case PAUSE:
@@ -115,22 +125,19 @@ func (w *ServerWorker) processRtspRequest(data string) {
 			fmt.Println("processing PAUSE\n")
 			w.state = READY
 
-			event := w.clientInfo["event"].(chan bool)
-			event <- true
+			w.clientInfo.Event <- true
 
 			w.replyRtsp(OK_200, seq[1])
 		}
 	case TEARDOWN:
 		fmt.Println("processing TEARDOWN\n")
 
-		event := w.clientInfo["event"].(chan bool)
-		event <- true
+		w.clientInfo.Event <- true
 
 		w.replyRtsp(OK_200, seq[1])
 
 		// Close the RTP socket
-		rtpSocket := w.clientInfo["rtpSocket"].(*net.UDPConn)
-		rtpSocket.Close()
+		w.clientInfo.RtpSocket.Close()
 	}
 }
 
@@ -140,14 +147,13 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 		case <-event:
 			return
 		default:
-			data := w.clientInfo["videoStream"].(*stream.VideoStream).NextFrame()
+			data := w.clientInfo.VideoStream.NextFrame()
 			if len(data) > 0 {
-				frameNumber := w.clientInfo["videoStream"].(*stream.VideoStream).FrameNbr()
+				frameNumber := w.clientInfo.VideoStream.FrameNbr()
 				rtpPacket := rtp.NewRtpPacket()
 				rtpPacket.Encode(2, false, false, 0, frameNumber, false, 26, 0, data)
 
-				rtpSocket := w.clientInfo["rtpSocket"].(*net.UDPConn)
-				_, err := rtpSocket.Write(rtpPacket.GetPacket())
+				_, err := w.clientInfo.RtpSocket.Write(rtpPacket.GetPacket())
 				if err != nil {
 					fmt.Println("Error sending RTP packet:", err)
 				}
@@ -159,9 +165,8 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 
 func (w *ServerWorker) replyRtsp(code int, seq string) {
 	if code == OK_200 {
-		reply := "RTSP/1.0 200 OK\nCSeq: " + seq + "\nSession: " + strconv.Itoa(w.clientInfo["session"].(int))
-		connSocket := w.clientInfo["rtspSocket"].(*net.Conn)
-		(*connSocket).Write([]byte(reply + "\n"))
+		reply := "RTSP/1.0 200 OK\nCSeq: " + seq + "\nSession: " + strconv.Itoa(w.clientInfo.Session)
+		(*w.clientInfo.RtspSocket).Write([]byte(reply + "\n"))
 	} else if code == FILE_NOT_FOUND_404 {
 		fmt.Println("404 NOT FOUND")
 	} else if code == CON_ERR_500 {
