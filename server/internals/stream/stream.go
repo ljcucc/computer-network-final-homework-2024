@@ -23,21 +23,28 @@ func NewVideoStream(filename string) *VideoStream {
 	return &VideoStream{
 		filename: filename,
 		file:     file,
-		frameNum: 0,
+		frameNum: -1,
 	}
 }
 
 func (v *VideoStream) NextFrame() []byte {
+	// read first one byte to fit next 4 bits into unit32
+	var head byte
+	binary.Read(v.file, binary.BigEndian, &head)
+
 	var frameLength uint32
 	err := binary.Read(v.file, binary.BigEndian, &frameLength)
 	if err != nil {
+		fmt.Println("Error reading frame length:", err)
 		if err == io.EOF {
 			// Handle end of file
+			fmt.Println("EOF")
 			return nil
 		}
-		fmt.Println("Error reading frame length:", err)
 		return nil
 	}
+
+	v.frameNum++
 
 	data := make([]byte, frameLength)
 	n, err := v.file.Read(data)
@@ -45,8 +52,6 @@ func (v *VideoStream) NextFrame() []byte {
 		fmt.Println("Error reading frame data:", err)
 		return nil
 	}
-
-	v.frameNum++
 
 	return data[:n]
 }

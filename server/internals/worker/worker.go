@@ -148,8 +148,11 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 			return
 		default:
 			data := w.clientInfo.VideoStream.NextFrame()
+			frameNumber := w.clientInfo.VideoStream.FrameNbr()
+
 			if len(data) > 0 {
-				frameNumber := w.clientInfo.VideoStream.FrameNbr()
+				fmt.Println("Sending frame: ", frameNumber)
+
 				rtpPacket := rtp.NewRtpPacket()
 				rtpPacket.Encode(2, false, false, 0, frameNumber, false, 26, 0, data)
 
@@ -157,6 +160,8 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 				if err != nil {
 					fmt.Println("Error sending RTP packet:", err)
 				}
+			} else {
+				fmt.Println("No data at frame: ", frameNumber)
 			}
 			time.Sleep(40 * time.Millisecond) // Adjust this for your frame rate
 		}
