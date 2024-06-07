@@ -1,5 +1,3 @@
-import traceback
-
 class VideoStream:
 	def __init__(self, filename):
 		self.filename = filename
@@ -14,7 +12,7 @@ class VideoStream:
 		"""Get next frame."""
 		data = self.file.read(5) # Get the framelength from the first 5 bits
 		if data:
-			framelength = int(data)
+			framelength = int.from_bytes(data, byteorder='big', signed=False)
 
 			# Read the current frame
 			data = self.file.read(framelength)

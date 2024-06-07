@@ -103,7 +103,7 @@ def video_to_jpeg_bytearrays(video_path, resize_width=200, resize_height=150, ta
         im_pil = Image.fromarray(img)
 
         jpeg_buffer = io.BytesIO()
-        im_pil.save(jpeg_buffer, format="JPEG")
+        im_pil.save(jpeg_buffer, format="JPEG", optimize=True, quality=20)
         frame_bytearrays.append(jpeg_buffer.getvalue())
 
 
@@ -127,7 +127,12 @@ def main():
                 if frame != None:
                     # Write frame length
                     frame_length = len(frame)
-                    outfile.write(struct.pack('>L', frame_length))
+                    print(f"frame len: {frame_length}")
+                    frame_length_bytes = bytearray(struct.pack('>L', frame_length))
+                    frame_length_bytes.insert(0, 0)
+                    outfile.write(frame_length_bytes)
+
+                    # Payload
                     outfile.write(frame)
                 else:
                     break
