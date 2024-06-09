@@ -101,7 +101,9 @@ func (w *ServerWorker) processRtspRequest(data string) {
 			w.state = PLAYING
 
 			// Create a new socket for RTP/UDP
-			rtpAddr, err := net.ResolveUDPAddr("udp", ":"+w.clientInfo.RtpPort)
+			fmt.Println("Resolving UDPAddr")
+			remoteAddr := strings.Split((*w.clientInfo.RtspSocket).RemoteAddr().String(), ":")[0]
+			rtpAddr, err := net.ResolveUDPAddr("udp", remoteAddr+":"+w.clientInfo.RtpPort)
 			if err != nil {
 				fmt.Println("Error resolving address:", err)
 				return
