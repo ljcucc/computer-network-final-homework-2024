@@ -41,7 +41,7 @@ class RtspClient {
     rtspSocket.listen(handleRtspReply);
   }
 
-  void sendRtspRequest(RtspRequest requestCode) {
+  void sendRtspRequest(RtspRequest requestCode) async {
     String request;
 
     switch (requestCode) {
@@ -51,6 +51,8 @@ class RtspClient {
           request =
               'SETUP $fileName RTSP/1.0\nCSeq: $rtspSeq\nTransport: RTP/UDP; client_port= $rtpPort';
           requestSent = RtspRequest.setup;
+          await openRtpPort();
+          listenRtp();
         } else {
           return;
         }
@@ -114,11 +116,9 @@ class RtspClient {
           switch (requestSent) {
             case RtspRequest.setup:
               state = RtspState.ready;
-              openRtpPort();
               break;
             case RtspRequest.play:
               state = RtspState.playing;
-              listenRtp();
               break;
             case RtspRequest.pause:
               state = RtspState.ready;

@@ -103,12 +103,17 @@ func (w *ServerWorker) processRtspRequest(data string) {
 			// Create a new socket for RTP/UDP
 			fmt.Println("Resolving UDPAddr")
 			remoteAddr := strings.Split((*w.clientInfo.RtspSocket).RemoteAddr().String(), ":")[0]
-			rtpAddr, err := net.ResolveUDPAddr("udp", remoteAddr+":"+w.clientInfo.RtpPort)
+			rtpPort, err := strconv.Atoi(strings.TrimSpace(w.clientInfo.RtpPort))
 			if err != nil {
 				fmt.Println("Error resolving address:", err)
 				return
 			}
-			rtpSocket, err := net.DialUDP("udp", nil, rtpAddr)
+			// fmt.Println("DiaUDP with rtpAddr: ", rtpAddr)
+			rtpSocket, err := net.DialUDP("udp", nil, &net.UDPAddr{
+				IP:   net.ParseIP(remoteAddr),
+				Port: rtpPort,
+			})
+
 			if err != nil {
 				fmt.Println("Error creating UDP socket:", err)
 				return
