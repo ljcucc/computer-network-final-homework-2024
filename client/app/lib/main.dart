@@ -40,12 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text("RTSP Example"),
       ),
-      body: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AnimatedImageController()),
-        ],
-        child: const AppLayout(),
-      ),
+      body: const AppLayout(),
     );
   }
 }

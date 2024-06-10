@@ -1,7 +1,7 @@
-import 'package:app/widgets/animated_image/animated_image.dart';
+import 'package:app/pages/mjpg_streaming.dart';
+import 'package:app/pages/mp4_streaming.dart';
 import 'package:app/widgets/animated_image/animated_image_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 
 class AppLayout extends StatelessWidget {
@@ -9,59 +9,41 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonGroups =
-        Consumer<AnimatedImageController>(builder: (context, value, child) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          FloatingActionButton(
-            elevation: 0,
-            onPressed: () {
-              if (!value.isSetup) {
-                print("calling setup()");
-                value.setup();
-                return;
-              }
-
-              print("calling teardown()");
-              value.teardown();
-            },
-            child: Icon(
-              value.isSetup
-                  ? Icons.cloud_done_outlined
-                  : Icons.cloud_off_outlined,
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 500),
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text("Mjpg Stream"),
+              subtitle: Text("Mjpg Video-only Streaming Test(no audio)"),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => MultiProvider(
+                      providers: [
+                        ChangeNotifierProvider(
+                            create: (_) => AnimatedImageController()),
+                      ],
+                      child: const MjpgStreamingPage(),
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-          const Gap(8),
-          FloatingActionButton(
-            elevation: 0,
-            onPressed: () {
-              if (!value.isPlay) {
-                print("calling play()");
-                value.play();
-                return;
-              }
-
-              print("calling pause()");
-              value.pause();
-            },
-            child: Icon(
-              value.isPlay ? Icons.pause_outlined : Icons.play_arrow_outlined,
+            ListTile(
+              title: Text("MPEG-4 Stream"),
+              subtitle: Text("MPEG-4 File Streaming"),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) => const Mp4StreamingPage()),
+                );
+              },
             ),
-          )
-        ],
-      );
-    });
-
-    return SafeArea(
-      minimum: const EdgeInsets.all(24),
-      child: Column(children: [
-        const Expanded(
-          child: AnimatedImageWidget(),
+          ],
         ),
-        const Gap(8),
-        buttonGroups,
-      ]),
+      ),
     );
   }
 }

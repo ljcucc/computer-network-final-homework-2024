@@ -24,10 +24,10 @@ class AnimatedImageController extends ChangeNotifier {
       );
 
       await client!.connect();
-      _isConnect = true;
       notifyListeners();
     }
 
+    _isConnect = true;
     client!.sendRtspRequest(RtspRequest.setup);
     _isSetup = true;
     notifyListeners();
