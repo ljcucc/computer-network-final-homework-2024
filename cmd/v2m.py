@@ -80,7 +80,7 @@ def video_to_jpeg_bytearrays(video_path, resize_width=200, resize_height=150, ta
     frame_bytearrays = []
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
-    print(f"{fps} frames per second")
+    print(f"{video_path} is {fps} frames per second")
 
     if not cap.isOpened():
         raise IOError("Error opening video file")
@@ -126,11 +126,9 @@ def main():
                 frame = stream.nextFrame()
                 if frame != None:
                     # Write frame length
-                    frame_length = len(frame)
+                    frame_length = str(len(frame)).rjust(5, '0').encode()
                     print(f"frame len: {frame_length}")
-                    frame_length_bytes = bytearray(struct.pack('>L', frame_length))
-                    frame_length_bytes.insert(0, 0)
-                    outfile.write(frame_length_bytes)
+                    outfile.write(frame_length)
 
                     # Payload
                     outfile.write(frame)
