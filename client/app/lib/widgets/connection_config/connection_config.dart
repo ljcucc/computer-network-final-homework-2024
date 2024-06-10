@@ -42,58 +42,53 @@ class _ConnectionConfigWidgetState extends State<ConnectionConfigWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          FilledButton(
-            onPressed: () {
-              final aic =
-                  Provider.of<AnimatedImageController>(context, listen: false);
-              aic.client = RtspClient(
-                serverAddr: serverAddr.text,
-                serverPort: int.tryParse(port.text) ?? 8080,
-                rtpPort: int.tryParse(rtpPort.text) ?? 9000,
-                fileName: filename.text,
-              );
-              aic.client!.connect();
-            },
-            child: Text("Connect"),
-          ),
-          Gap(8),
-          FilledButton.tonalIcon(
-            icon: Icon(Icons.edit_outlined),
-            onPressed: () {
-              _promptDialog(serverAddr, "Server Address");
-            },
-            label: Text("Server Addr: ${serverAddr.text}"),
-          ),
-          Gap(8),
-          FilledButton.tonalIcon(
-            icon: Icon(Icons.edit_outlined),
-            onPressed: () {
-              _promptDialog(port, "Port");
-            },
-            label: Text("Port: ${port.text}"),
-          ),
-          Gap(8),
-          FilledButton.tonalIcon(
-            icon: Icon(Icons.edit_outlined),
-            onPressed: () {
-              _promptDialog(rtpPort, "RTP Port");
-            },
-            label: Text("RTP Port: ${rtpPort.text}"),
-          ),
-          Gap(8),
-          FilledButton.tonalIcon(
-            icon: Icon(Icons.edit_outlined),
-            onPressed: () {
-              _promptDialog(filename, "Filename");
-            },
-            label: Text("Filename: ${filename.text}"),
-          ),
-        ],
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilledButton(
+          onPressed: () {
+            final aic =
+                Provider.of<AnimatedImageController>(context, listen: false);
+            aic.client = RtspClient(
+              serverAddr: serverAddr.text,
+              serverPort: int.tryParse(port.text) ?? 8080,
+              rtpPort: int.tryParse(rtpPort.text) ?? 9000,
+              fileName: filename.text,
+            );
+            aic.client!.connect();
+          },
+          child: Text("Connect"),
+        ),
+        FilledButton.tonalIcon(
+          icon: Icon(Icons.edit_outlined),
+          onPressed: () {
+            _promptDialog(serverAddr, "Server Address");
+          },
+          label: Text("Server Addr: ${serverAddr.text}"),
+        ),
+        FilledButton.tonalIcon(
+          icon: Icon(Icons.edit_outlined),
+          onPressed: () {
+            _promptDialog(port, "Port");
+          },
+          label: Text("Port: ${port.text}"),
+        ),
+        FilledButton.tonalIcon(
+          icon: Icon(Icons.edit_outlined),
+          onPressed: () {
+            _promptDialog(rtpPort, "RTP Port");
+          },
+          label: Text("RTP Port: ${rtpPort.text}"),
+        ),
+        FilledButton.tonalIcon(
+          icon: Icon(Icons.edit_outlined),
+          onPressed: () {
+            _promptDialog(filename, "Filename");
+          },
+          label: Text("Filename: ${filename.text}"),
+        ),
+      ],
     );
   }
 }
