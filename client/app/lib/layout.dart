@@ -1,6 +1,6 @@
+import 'package:app/data/rtsp_provider.dart';
 import 'package:app/pages/mjpg_streaming.dart';
 import 'package:app/pages/mp4_streaming.dart';
-import 'package:app/widgets/animated_image/animated_image_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,8 +22,7 @@ class AppLayout extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => MultiProvider(
                       providers: [
-                        ChangeNotifierProvider(
-                            create: (_) => AnimatedImageController()),
+                        ChangeNotifierProvider(create: (_) => RtspProvider()),
                       ],
                       child: const MjpgStreamingPage(),
                     ),
@@ -37,7 +36,13 @@ class AppLayout extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (context) => const Mp4StreamingPage()),
+                    builder: (context) => MultiProvider(
+                      providers: [
+                        ChangeNotifierProvider(create: (_) => RtspProvider()),
+                      ],
+                      child: const Mp4StreamingPage(),
+                    ),
+                  ),
                 );
               },
             ),

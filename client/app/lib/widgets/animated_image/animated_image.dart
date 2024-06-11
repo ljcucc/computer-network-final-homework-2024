@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:app/widgets/animated_image/animated_image_controller.dart';
+import 'package:app/data/rtsp_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,8 +9,8 @@ class AnimatedImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AnimatedImageController>(builder:
-        (BuildContext context, AnimatedImageController value, Widget? child) {
+    return Consumer<RtspProvider>(
+        builder: (BuildContext context, RtspProvider value, Widget? child) {
       Widget imageStream = value.client == null
           ? Container()
           : StreamBuilder<Uint8List>(

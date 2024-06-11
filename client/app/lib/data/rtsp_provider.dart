@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socket_rtsp/socket_rtsp.dart';
 
-class AnimatedImageController extends ChangeNotifier {
+class RtspProvider extends ChangeNotifier {
   RtspClient? client;
   bool _isConnect = false;
 

@@ -1,4 +1,4 @@
-import 'package:app/widgets/animated_image/animated_image_controller.dart';
+import 'package:app/data/rtsp_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +8,7 @@ class RtspButtonGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AnimatedImageController>(builder: (context, value, child) {
+    return Consumer<RtspProvider>(builder: (context, value, child) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

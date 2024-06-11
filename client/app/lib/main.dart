@@ -1,9 +1,12 @@
 import 'package:app/layout.dart';
-import 'package:app/widgets/animated_image/animated_image_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:media_kit/media_kit.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Necessary initialization for package:media_kit.
+  MediaKit.ensureInitialized();
   runApp(const MyApp());
 }
 

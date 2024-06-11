@@ -1,4 +1,4 @@
-import 'package:app/widgets/animated_image/animated_image_controller.dart';
+import 'package:app/data/rtsp_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
@@ -12,10 +12,12 @@ class ConnectionConfigWidget extends StatefulWidget {
 }
 
 class _ConnectionConfigWidgetState extends State<ConnectionConfigWidget> {
-  TextEditingController serverAddr = TextEditingController(text: "127.0.0.1");
-  TextEditingController port = TextEditingController(text: "8080");
-  TextEditingController rtpPort = TextEditingController(text: "9000");
-  TextEditingController filename = TextEditingController(text: "../ikea3.mjpg");
+  late TextEditingController serverAddr =
+      TextEditingController(text: "127.0.0.1");
+  late TextEditingController port = TextEditingController(text: "8080");
+  late TextEditingController rtpPort = TextEditingController(text: "9000");
+  late TextEditingController filename =
+      TextEditingController(text: "../test.mp4");
 
   _promptDialog(TextEditingController tec, String title) {
     showDialog(
@@ -48,8 +50,7 @@ class _ConnectionConfigWidgetState extends State<ConnectionConfigWidget> {
       children: [
         FilledButton(
           onPressed: () {
-            final aic =
-                Provider.of<AnimatedImageController>(context, listen: false);
+            final aic = Provider.of<RtspProvider>(context, listen: false);
             aic.client = RtspClient(
               serverAddr: serverAddr.text,
               serverPort: int.tryParse(port.text) ?? 8080,
