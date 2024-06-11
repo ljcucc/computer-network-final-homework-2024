@@ -77,8 +77,8 @@ class ChunkJoiner {
 
   Future<void> join() async {
     _inputStream.listen((chunk) {
-      print("join: ${chunk.length}");
       if (chunk.length < 4) {
+        // print(chunk);
         if (!_completer.isCompleted) _completer.complete();
         return;
       }
@@ -95,6 +95,7 @@ class ChunkJoiner {
   Uint8List get joinedData {
     final totalLength =
         _chunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
+    print("join: $totalLength");
     final result = Uint8List(totalLength);
     int offset = 0;
     for (var chunk in _chunks) {

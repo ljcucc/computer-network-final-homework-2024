@@ -23,7 +23,7 @@ func NewBinaryStream(filename string, chunkSize int) *BinaryStream {
 	return &BinaryStream{
 		filename:  filename,
 		file:      file,
-		frameNum:  -1,
+		frameNum:  0,
 		chunkSize: chunkSize,
 	}
 }
@@ -33,15 +33,17 @@ func (v *BinaryStream) NextFrame() []byte {
 
 	data := make([]byte, v.chunkSize)
 	n, err := v.file.Read(data)
-	fmt.Println("readed from file sized: ", n, ", first byte: ", data[0], "cum size(K): ", v.frameNum*4)
+	fmt.Println("readed from file sized: ", n, ", first byte: ", data[0])
 	if err != nil {
 		fmt.Println("Error reading frame data:", err)
 		if err == io.EOF {
 			// Handle end of file
 			fmt.Println("EOF")
+		}
+
+		if n == 0 {
 			return []byte{0, 1}
 		}
-		return []byte{0, 1}
 	}
 
 	return data[:n]

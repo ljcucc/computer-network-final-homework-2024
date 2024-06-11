@@ -115,6 +115,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 				return
 			}
 			// fmt.Println("DiaUDP with rtpAddr: ", rtpAddr)
+			fmt.Println("diaudp")
 			rtpSocket, err := net.DialUDP("udp", nil, &net.UDPAddr{
 				IP:   net.ParseIP(remoteAddr),
 				Port: rtpPort,
@@ -163,7 +164,9 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 			data := w.clientInfo.VideoStream.NextFrame()
 			frameNumber := w.clientInfo.VideoStream.FrameNbr()
 
-			// if len(data) > 0 {
+			if len(data) == 0 || data == nil {
+				data = []byte{0, 1}
+			}
 			fmt.Println("Sending frame: ", frameNumber)
 
 			rtpPacket := rtp.NewRtpPacket()
@@ -186,6 +189,7 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 			// 	return
 			// }
 			time.Sleep(1 * time.Millisecond) // Adjust this for your frame rate
+
 		}
 	}
 }

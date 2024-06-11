@@ -37,9 +37,13 @@ class _TranscodeVideoPlayerState extends State<TranscodeVideoPlayer> {
         fileName: '../hls/filename.m3u8',
       );
       await client.connect();
-      await Future.delayed(Duration(milliseconds: 800));
+      while (client.rtspSocket == null) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
       client.sendRtspRequest(RtspRequest.setup);
-      await Future.delayed(Duration(milliseconds: 800));
+      while (client.state != RtspState.ready) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
       final joiner = ChunkJoiner(client.frameStream);
       client.sendRtspRequest(RtspRequest.play);
       await joiner.join();
@@ -56,9 +60,13 @@ class _TranscodeVideoPlayerState extends State<TranscodeVideoPlayer> {
         fileName: '../hls/filename${i.toString()}.ts',
       );
       await client.connect();
-      await Future.delayed(Duration(milliseconds: 800));
+      while (client.rtspSocket == null) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
       client.sendRtspRequest(RtspRequest.setup);
-      await Future.delayed(Duration(milliseconds: 800));
+      while (client.state != RtspState.ready) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
       final joiner = ChunkJoiner(client.frameStream);
       client.sendRtspRequest(RtspRequest.play);
       await joiner.join();
