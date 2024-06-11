@@ -14,13 +14,19 @@ import (
 )
 
 const (
-	SETUP              = "SETUP"
-	PLAY               = "PLAY"
-	PAUSE              = "PAUSE"
-	TEARDOWN           = "TEARDOWN"
-	INIT               = 0
-	READY              = 1
-	PLAYING            = 2
+	SETUP    = "SETUP"
+	PLAY     = "PLAY"
+	PAUSE    = "PAUSE"
+	TEARDOWN = "TEARDOWN"
+)
+
+const (
+	INIT    = 0
+	READY   = 1
+	PLAYING = 2
+)
+
+const (
 	OK_200             = 0
 	FILE_NOT_FOUND_404 = 1
 	CON_ERR_500        = 2
@@ -29,7 +35,7 @@ const (
 // ClientInfo struct to hold client-specific information
 type ClientInfo struct {
 	RtspSocket  *net.Conn
-	VideoStream *stream.VideoStream
+	VideoStream stream.VideoStream
 	Session     int
 	RtpPort     string
 	RtpSocket   *net.UDPConn
@@ -81,7 +87,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 	switch requestType {
 	case SETUP:
 		if w.state == INIT {
-			fmt.Println("processing SETUP\n")
+			fmt.Println("processing SETUP")
 
 			w.clientInfo.VideoStream = stream.NewVideoStream(filename)
 			w.state = READY
@@ -97,7 +103,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 		}
 	case PLAY:
 		if w.state == READY {
-			fmt.Println("processing PLAY\n")
+			fmt.Println("processing PLAY")
 			w.state = PLAYING
 
 			// Create a new socket for RTP/UDP
@@ -129,7 +135,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 		}
 	case PAUSE:
 		if w.state == PLAYING {
-			fmt.Println("processing PAUSE\n")
+			fmt.Println("processing PAUSE")
 			w.state = READY
 
 			w.clientInfo.Event <- true
@@ -137,7 +143,7 @@ func (w *ServerWorker) processRtspRequest(data string) {
 			w.replyRtsp(OK_200, seq[1])
 		}
 	case TEARDOWN:
-		fmt.Println("processing TEARDOWN\n")
+		fmt.Println("processing TEARDOWN")
 
 		w.clientInfo.Event <- true
 
@@ -157,20 +163,29 @@ func (w *ServerWorker) sendRtp(event chan bool) {
 			data := w.clientInfo.VideoStream.NextFrame()
 			frameNumber := w.clientInfo.VideoStream.FrameNbr()
 
-			if len(data) > 0 {
-				fmt.Println("Sending frame: ", frameNumber)
+			// if len(data) > 0 {
+			fmt.Println("Sending frame: ", frameNumber)
 
-				rtpPacket := rtp.NewRtpPacket()
-				rtpPacket.Encode(2, false, false, 0, frameNumber, false, 26, 0, data)
+			rtpPacket := rtp.NewRtpPacket()
+			rtpPacket.Encode(2, false, false, 0, frameNumber, false, 26, 0, data)
 
-				_, err := w.clientInfo.RtpSocket.Write(rtpPacket.GetPacket())
-				if err != nil {
-					fmt.Println("Error sending RTP packet:", err)
-				}
-			} else {
-				fmt.Println("No data at frame: ", frameNumber)
+			_, err := w.clientInfo.RtpSocket.Write(rtpPacket.GetPacket())
+			if err != nil {
+				fmt.Println("Error sending RTP packet:", err)
 			}
-			time.Sleep(40 * time.Millisecond) // Adjust this for your frame rate
+			// } else {
+			// 	fmt.Println("No data at frame: ", frameNumber)
+
+			// 	rtpPacket := rtp.NewRtpPacket()
+			// 	rtpPacket.Encode(2, false, false, 0, frameNumber, false, 26, 0, data)
+
+			// 	_, err := w.clientInfo.RtpSocket.Write(rtpPacket.GetPacket())
+			// 	if err != nil {
+			// 		fmt.Println("Error sending RTP packet:", err)
+			// 	}
+			// 	return
+			// }
+			time.Sleep(1 * time.Millisecond) // Adjust this for your frame rate
 		}
 	}
 }

@@ -53,7 +53,7 @@ class RtspClient:
             )
             self.request_sent = RtspRequest.SETUP
             self._open_rtp_port()
-            threading.Thread(target=self._listen_rtp).start()
+            # threading.Thread(target=self._listen_rtp).start()
 
         elif request_code == RtspRequest.PLAY and self.state == RtspState.READY:
             self.rtsp_seq += 1
@@ -124,31 +124,34 @@ class RtspClient:
         self.rtp_socket.bind(("", self.rtp_port))
         print("RTP port is opened")
 
-    def _listen_rtp(self):
+    def listen_rtp(self):
         """Listen for RTP packets and process them."""
-        while True:
-            if self.teardown_acked:
-                break
-            try:
-                data = self.rtp_socket.recv(20480)
-                if data:
-                    rtp_packet = RtpPacket()
-                    rtp_packet.decode(data)
-                    curr_frame_nbr = rtp_packet.seqNum()
-                    # print(f"Current Seq Num: {curr_frame_nbr}")
+        if self.teardown_acked:
+            print("teardown_acked")
+            return
+        try:
+            data = self.rtp_socket.recv(20480)
+            if data:
+                rtp_packet = RtpPacket()
+                rtp_packet.decode(data)
+                curr_frame_nbr = rtp_packet.seqNum()
+                print(f"Current Seq Num: {curr_frame_nbr}")
 
-                    if curr_frame_nbr > self.frame_nbr:
-                        self.frame_nbr = curr_frame_nbr
-                        self._frame_event.set()
-                        self._frame_event.clear()
-                        yield rtp_packet.getPayload()
-            except socket.timeout:
-                pass
-            except OSError:
-                break
+                if curr_frame_nbr > self.frame_nbr:
+                    self.frame_nbr = curr_frame_nbr
+                    self._frame_event.set()
+                    self._frame_event.clear()
+                    return rtp_packet.getPayload()
+        except socket.timeout:
+            print("socket timeout")
+            pass
+        except OSError as e:
+            print("OSError")
+            print(e)
+            return
 
-    @property
-    def frame_stream(self):
-        """Generator that yields received video frames."""
-        for frame in self._listen_rtp():
-            yield frame
+    # @property
+    # def frame_stream(self):
+    #     """Generator that yields received video frames."""
+    #     for frame in self._listen_rtp():
+    #         yield frame

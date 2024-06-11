@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const CHUNK_SIZE = 1024
+const CHUNK_SIZE = 4096
 
 type VideoStream interface {
 	NextFrame() []byte

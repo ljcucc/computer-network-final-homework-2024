@@ -26,7 +26,7 @@ class RtspClient {
   late RawDatagramSocket rtpSocket;
   late Socket rtspSocket;
   final StreamController<Uint8List> _frameStreamController =
-      StreamController<Uint8List>();
+      StreamController<Uint8List>.broadcast();
 
   Stream<Uint8List> get frameStream => _frameStreamController.stream;
 
@@ -144,14 +144,14 @@ class RtspClient {
 
   void listenRtp() {
     rtpSocket.listen((event) {
-      print("new rtp packet");
+      // print("new rtp packet");
       if (event == RawSocketEvent.read) {
         final packet = rtpSocket.receive();
         if (packet != null) {
           final rtpPacket = RtpPacket();
           rtpPacket.decode(packet.data);
           final currFrameNbr = rtpPacket.seqNum();
-          print('Current Seq Num: $currFrameNbr');
+          // print('Current Seq Num: $currFrameNbr');
 
           if (currFrameNbr > frameNbr) {
             frameNbr = currFrameNbr;
@@ -159,6 +159,9 @@ class RtspClient {
           }
         }
       }
+    }).onDone(() {
+      print("socket closed");
+      _frameStreamController.close();
     });
   }
 }

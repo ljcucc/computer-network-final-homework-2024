@@ -1,74 +1,106 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:app/data/rtsp_provider.dart';
+class HLSServer {
+  final String filename;
+  final Future<String> Function() resolveM3u8;
+  final Future<Uint8List> Function(int) resolveTs;
 
-class StreamingServer {
-  final Stream<Uint8List> _videoStream;
-  RtspProvider rtsp;
+  HLSServer({
+    required this.filename,
+    required this.resolveM3u8,
+    required this.resolveTs,
+  });
 
-  StreamingServer(this._videoStream, this.rtsp);
+  Future<void> start(int port) async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+    print('Server listening on port ${server.port}');
 
-  int frame = 0;
-
-  Future<void> start(String host, int port) async {
-    final server = await ServerSocket.bind(host, port);
-    print('Server started on ${server.address.address}:${server.port}');
-
-    server.listen((socket) {
-      _handleConnection(socket);
-    });
-  }
-
-  void _handleConnection(Socket socket) {
-    print('Connected by ${socket.remoteAddress.address}:${socket.remotePort}');
-
-    socket.listen((data) async {
-      final request = String.fromCharCodes(data).split('\n')[0];
-      if (request.contains('/video.mp4')) {
-        print("got request");
-        await _sendVideoStream(socket);
-      } else if (request.contains('.m3u8')) {
+    await for (HttpRequest request in server) {
+      final path = request.uri.path;
+      if (path == '/$filename.m3u8') {
+        _handleM3u8Request(request);
+      } else if (path.startsWith('/$filename') && path.endsWith('.ts')) {
+        _handleTsRequest(request);
       } else {
-        _send404(socket);
+        request.response.statusCode = HttpStatus.notFound;
+        await request.response.close();
       }
-    });
-  }
-
-  Future<void> _sendVideoStream(Socket socket) async {
-    socket.writeln('HTTP/1.1 200 OK');
-    socket.writeln('Content-Type: video/mp4');
-    socket.writeln('Transfer-Encoding: chuncked');
-    socket.writeln('Content-Length: 3700000'); // Length of body
-    socket.writeln(); // End of headers
-    print("sending video...");
-
-    await rtsp.play();
-    // await socket.addStream(_videoStream);
-
-    await for (final chunk in _videoStream) {
-      print(
-          "write chunk ${chunk.length}, first byte: ${chunk[0]}, frame ${frame++}");
-      socket.write(String.fromCharCodes(chunk));
-      // socket.add(chunk);
-      await socket.flush();
-      // socket.write(chunk);
-      // You can adjust the delay if needed to control the streaming rate.
-      await Future.delayed(Duration(milliseconds: 10));
     }
-
-    await socket.flush();
-    socket.close();
   }
 
-  void _send404(Socket socket) async {
-    socket.writeln('HTTP/1.0 404 Not Found'); // Note: \r\n
-    socket.writeln('Content-Type: text/plain'); // Example header
-    socket.writeln('Content-Length: 0'); // Length of body
-    socket.writeln(); // End of headers
-    await socket.flush();
-    socket.destroy();
-    socket.close();
+  Future<void> _handleM3u8Request(HttpRequest request) async {
+    try {
+      final m3u8Content = await resolveM3u8();
+      print("got m3u8");
+      request.response.headers.contentType =
+          ContentType('application', 'vnd.apple.mpegurl');
+      request.response.write(m3u8Content);
+    } catch (e) {
+      print('Error resolving m3u8: $e');
+      request.response.statusCode = HttpStatus.internalServerError;
+    } finally {
+      await request.response.close();
+    }
+  }
+
+  Future<void> _handleTsRequest(HttpRequest request) async {
+    try {
+      final segmentNumber =
+          int.tryParse(request.uri.path.split('.')[0].split(filename)[1]);
+      if (segmentNumber == null) {
+        throw Exception('Invalid segment number');
+      }
+      final tsContent = await resolveTs(segmentNumber);
+      request.response.headers.contentType =
+          ContentType('video', 'mp2t', charset: 'utf-8');
+      request.response.add(tsContent);
+    } catch (e) {
+      print('Error resolving ts segment: $e');
+      request.response.statusCode = HttpStatus.internalServerError;
+    } finally {
+      await request.response.close();
+    }
+  }
+}
+
+class ChunkJoiner {
+  final Stream<Uint8List> _inputStream;
+  final List<Uint8List> _chunks = [];
+  final Completer<void> _completer = Completer<void>();
+
+  bool isComplete = false;
+
+  ChunkJoiner(this._inputStream);
+
+  Future<void> join() async {
+    _inputStream.listen((chunk) {
+      print("join: ${chunk.length}");
+      if (chunk.length < 4) {
+        if (!_completer.isCompleted) _completer.complete();
+        return;
+      }
+      _chunks.add(chunk);
+      // print(utf8.decode(joinedData));
+    }, onDone: () {
+      print("done!");
+      // _completer.complete();
+    });
+
+    await _completer.future;
+  }
+
+  Uint8List get joinedData {
+    final totalLength =
+        _chunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
+    final result = Uint8List(totalLength);
+    int offset = 0;
+    for (var chunk in _chunks) {
+      result.setAll(offset, chunk);
+      offset += chunk.length;
+    }
+    return result;
   }
 }
